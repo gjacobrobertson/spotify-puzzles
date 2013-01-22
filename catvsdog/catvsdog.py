@@ -161,11 +161,7 @@ class HopcroftKarp(object):
 
     def independent_set(self):
         cover = self.vertex_cover()
-        ind_set = set([])
-        for vertex in self.left | self.right:
-            if vertex not in cover:
-                ind_set.add(vertex)
-        return ind_set
+        return (self.left | self.right) - cover
 
 
 if __name__ == '__main__':
