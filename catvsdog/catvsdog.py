@@ -82,8 +82,10 @@ class HopcroftKarp(object):
         def transition(vertex):
             if vertex in self.left:
                 return [adj for adj in vertex.adjacencies if adj.layer == -1 and frozenset([vertex, adj]) not in matching]
-            if vertex in self.right:
+            elif vertex in self.right:
                 return [adj for adj in vertex.adjacencies if adj.layer == -1 and frozenset([vertex, adj]) in matching]
+            else:
+                return []
 
         for vertex in self.left:
             if vertex.is_free(matching):
@@ -112,6 +114,8 @@ class HopcroftKarp(object):
                 return [adj for adj in vertex.adjacencies if not adj.used and frozenset([vertex, adj]) in matching and adj.layer == vertex.layer - 1]
             if vertex in self.right:
                 return [adj for adj in vertex.adjacencies if not adj.used and frozenset([vertex, adj]) not in matching and adj.layer == vertex.layer - 1]
+            else:
+                return []
 
         for vertex in self.right:
             if vertex.layer == self._max_layer:
@@ -142,7 +146,12 @@ class HopcroftKarp(object):
             return False
 
         def transition(vertex):
-            return [adj for adj in vertex.adjacencies if (vertex in self.left and frozenset([vertex, adj]) not in matching) or (vertex in self.right and frozenset([vertex, adj]) in matching)]
+            if vertex in self.left:
+                return [adj for adj in vertex.adjacencies if frozenset([vertex, adj]) not in matching]
+            elif vertex in self.right:
+                return [adj for adj in vertex.adjacencies if frozenset([vertex, adj]) in matching]
+            else:
+                return []
 
         for vertex in self.left:
             if vertex.is_free(matching):
