@@ -5,9 +5,9 @@ import sys
 
 class TestReverseBinary(unittest.TestCase):
     def test_reverse_num(self):
-        self.assertEqual(reversebinary.reverse_num(0), 0)
         self.assertEqual(reversebinary.reverse_num(1), 1)
         self.assertEqual(reversebinary.reverse_num(2), 1)
+        self.assertEqual(reversebinary.reverse_num(1000000000), 1365623)
 
         for i in range(1000):
             num = random.randint(1, 1000000000)
