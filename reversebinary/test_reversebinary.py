@@ -3,6 +3,7 @@ import reversebinary
 import random
 import sys
 
+
 class TestReverseBinary(unittest.TestCase):
     def test_reverse_num(self):
         self.assertEqual(reversebinary.reverse_num(1), 1)
