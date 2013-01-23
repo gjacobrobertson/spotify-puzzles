@@ -65,6 +65,7 @@ class HopcroftKarp(object):
         return False
 
     def _find_layering(self, matching):
+        self._max_layer = 0
         for vertex in self.left | self.right:
             vertex.layer = -1
 
