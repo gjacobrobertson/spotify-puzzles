@@ -1,29 +1,43 @@
-#Reversed Binary Numbers
-##Problem ID: reversebinary
+#Cat vs. Dog
+##Problem ID: catvsdog
 
-Yi has moved to Sweden and now goes to school here. The first years of schooling she got in China, and the curricula do not match completely in the two countries. Yi likes mathematics, but now... The teacher explains the algorithm for subtraction on the board, and Yi is bored. Maybe it is possible to perform the same calculations on the numbers corresponding to the reversed binary representations of the numbers on the board? Yi dreams away and starts constructing a program that reverses the binary representation, in her mind. As soon as the lecture ends, she will go home and write it on her computer.
+The latest reality show has hit the TV: “Cat vs. Dog”. In this show, a bunch of cats and dogs compete for the very prestigious Best Pet Ever title. In each episode, the cats and dogs get to show themselves off, after which the viewers vote on which pets should stay and which should be forced to leave the show.
 
-###Task
-Your task will be to write a program for reversing numbers in binary. For instance, the binary representation of 13 is 1101, and reversing it gives 1011, which corresponds to number 11.
+Each viewer gets to cast a vote on two things: one pet which should be kept on the show, and one pet which should be thrown out. Also, based on the universal fact that everyone is either a cat lover (i.e. a dog hater) or a dog lover (i.e. a cat hater), it has been decided that each vote must name exactly one cat and exactly one dog.
+
+Ingenious as they are, the producers have decided to use an advancement procedure which guarantees that as many viewers as possible will continue watching the show: the pets that get to stay will be chosen so as to maximize the number of viewers who get both their opinions satisfied. Write a program to calculate this maximum number of viewers.
 
 ###Input
-The input contains a single line with an integer N, 1 ≤ N ≤ 1000000000.
+On the first line one positive number: the number of testcases, at most 100. After that per testcase:
 
+One line with three integers c, d, v (1 ≤ c, d ≤ 100 and 0 ≤ v ≤ 500): the number of cats, dogs, and voters.
+v lines with two pet identifiers each. The first is the pet that this voter wants to keep, the second is the pet that this voter wants to throw out. A pet identifier starts with one of the characters ‘C’ or ‘D’, indicating whether the pet is a cat or dog, respectively. The remaining part of the identifier is an integer giving the number of the pet (between 1 and c for cats, and between 1 and d for dogs). So for instance, “D42” indicates dog number 42.
 ###Output
-Output one line with one integer, the number we get by reversing the binary representation of N.
+Per testcase:
 
+One line with the maximum possible number of satisfied voters for the show.
 Sample input 1
 
->13
+>2
+
+>1 1 2
+
+>C1 D1
+
+>D1 C1
+
+>1 2 4
+
+>C1 D1
+
+>C1 D1
+
+>C1 D2
+
+>D2 C1
 
 Sample output 1
 
->11
+>1
 
-Sample input 2
-
->47
-
-Sample output 2
-
->61
+>3
