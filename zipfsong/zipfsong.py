@@ -2,12 +2,8 @@ import sys
 import heapq
 
 
-def key(song):
-    return song['quality']
-
-
 def best_m_songs(m, songs):
-    return heapq.nlargest(m, songs, key)
+    return heapq.nlargest(m, songs, lambda song: int(song['plays']) * song['index'])
 
 
 if __name__ == '__main__':
@@ -16,7 +12,7 @@ if __name__ == '__main__':
     songs = []
     for i in range(1, n + 1):
         line = sys.stdin.readline()
-        plays, title = [val.rstrip() for val in line.split(' ')]
-        songs.append({'quality': int(plays) * i, 'title': title})
+        plays, title = [val.strip() for val in line.split(' ')]
+        songs.append({'plays': plays, 'title': title, 'index': i})
     for song in best_m_songs(m, songs):
         print song['title']
