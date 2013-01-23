@@ -22,8 +22,8 @@ class TestZipfSong(unittest.TestCase):
 
         return (songs, best_indices)
 
-    def random_tests(self):
-        for i in range(100):
+    def random_tests(self, num_tests):
+        for i in range(num_tests):
             #Pick random values for n and m
             n = random.randint(1, 50000)
             m = random.randint(1, n)
@@ -41,7 +41,7 @@ class TestZipfSong(unittest.TestCase):
         self.assertEqual(zipfsong.best_m_songs(2, songs), songs)
         self.assertEqual(zipfsong.best_m_songs(1, songs), songs[:1])
 
-        self.random_tests()
+        self.random_tests(100)
 
 
 if __name__ == '__main__':
