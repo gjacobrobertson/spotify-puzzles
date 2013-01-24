@@ -2,6 +2,7 @@ import catvsdog
 import unittest
 import random
 import itertools
+import time
 
 
 class TestCatVsDog(unittest.TestCase):
