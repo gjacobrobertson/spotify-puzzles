@@ -6,50 +6,36 @@ import time
 
 
 class TestCatVsDog(unittest.TestCase):
-    def _random_graph(self, n):
-        graph = catvsdog.WeightedBipartiteGraph()
-        for i in range(n):
-            coin = random.choice([True,False])
+    def test_cat_vs_dog(self):
+        graph = catvsdog.FlowNetwork()
+        graph.add_vertex('source')
+        graph.add_vertex('sink')
+
+        left = set([])
+        right = set([])
+        for i in range(500):
+            graph.add_vertex(str(i))
+            coin = random.choice([True, False])
             if coin:
-                graph.left.add(catvsdog.Vertex('Left %d' % i))
+                left.add(str(i))
             else:
-                graph.right.add(catvsdog.Vertex('Right %d' % i))
+                right.add(str(i))
 
-        i = 0
-        for l in graph.left:
-            for r in graph.right:
-                coin = random.choice([True,False])
+        for l in left:
+            for r in right:
+                coin = random.choice([True, False])
                 if coin:
-                    i += 1
-                    graph.add_edge(l, r)
-        print i
-        return graph
+                    graph.add_edge(l, r, 1)
 
-    def random_tests(self, num_tests):
-        for i in range(num_tests):
-            n = random.randint(0, 500)
-            graph = self._random_graph(n)
-            print "GRAPH"
-            _t0 = time.time()
-            matching = graph.matching()
-            print time.time() - _t0
+        for l in left:
+            graph.add_edge('source', l, 1)
+        for r in right:
+            graph.add_edge(r, 'sink', 1)
 
-
-    def test_independent_set(self):
-        u = catvsdog.Vertex('u')
-        v = catvsdog.Vertex('v')
-        graph = catvsdog.WeightedBipartiteGraph()
-        graph.left.add(u)
-        graph.right.add(v)
-
-        matching = graph.matching()
-        self.assertEqual(matching, set([]))
-
-        graph.add_edge(u, v, 1)
-        matching = graph.matching()
-        self.assertEqual(matching, set([frozenset([u, v])]))
-
-        self.random_tests(1)
+        print "STARTING"
+        _t0 = time.time()
+        print graph.max_flow('source', 'sink')
+        print time.time() - _t0
 
 
 if __name__ == '__main__':
