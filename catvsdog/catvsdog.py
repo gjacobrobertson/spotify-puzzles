@@ -1,139 +1,71 @@
 import sys
 from collections import deque
 
-
-class Vertex(object):
-    def __init__(self, title):
-        self.title = title.rstrip()
-        self.adjacencies = set([])
-
-    def is_free(self, matching):
-        for edge in matching:
-            if self in edge:
-                return False
-        return True
-
-    def __repr__(self):
-        return self.title
-
-
 class HopcroftKarp(object):
     def __init__(self):
+        self.adj = {'nil': set()}
+        self.pair_left = {}
+        self.pair_right = {}
         self.left = set([])
         self.right = set([])
+        self.dist = {}
+
+    def add_left(self, v):
+        self.left.add(v)
+        self.adj[v] = set()
+
+    def add_right(self, v):
+        self.right.add(v)
+        self.adj[v] = set()
 
     def add_edge(self, u, v):
         if (u in self.left and v in self.right) or (u in self.right and v in self.left):
-            u.adjacencies.add(v)
-            v.adjacencies.add(u)
+            self.adj[u].add(v)
+            self.adj[v].add(u)
 
-    def breadth_first_search(self, root, visit_fn, transition_fn):
-        for vertex in self.left | self.right:
-            vertex.prev = None
+    def BFS(self):
         queue = deque()
-        queue.append(root)
-        visited = set([])
+        for v in self.left:
+            if self.pair_left[v] == 'nil':
+                self.dist[v] = 0
+                queue.append(v)
+            else:
+                self.dist[v] = float('inf')
+
+        self.dist['nil'] = float('inf')
         while len(queue) > 0:
-            vertex = queue.popleft()
-            visited.add(vertex)
-            if visit_fn(vertex):
-                return True
+            v = queue.popleft()
+            for u in self.adj[v]:
+                if self.dist[self.pair_right[u]] == float('inf'):
+                    self.dist[self.pair_right[u]] = self.dist[v] + 1
+                    queue.append(self.pair_right[u])
 
-            for adj in transition_fn(vertex):
-                if adj not in visited:
-                    adj.prev = vertex
-                    queue.append(adj)
+        return self.dist['nil'] != float('inf')
 
-        return False
-
-    def depth_first_search(self, root, visit_fn, transition_fn):
-        for vertex in self.left | self.right:
-            vertex.prev = None
-        stack = [root]
-        visited = set([])
-        while len(stack) > 0:
-            vertex = stack.pop()
-            visited.add(vertex)
-            if visit_fn(vertex):
-                return True
-
-            for adj in transition_fn(vertex):
-                if adj not in visited:
-                    adj.prev = vertex
-                    stack.append(adj)
-
-        return False
-
-    def _find_layering(self, matching):
-        self._max_layer = 0
-        for vertex in self.left | self.right:
-            vertex.layer = -1
-
-        def visit(vertex):
-            if vertex.prev is not None:
-                vertex.layer = vertex.prev.layer + 1
-            else:
-                vertex.layer = 0
-
-            if vertex in self.right and vertex.is_free(matching):
-                self._max_layer = vertex.layer
-
+    def DFS(self, v):
+        if v != 'nil':
+            for u in self.adj[v]:
+                if self.dist[self.pair_right[u]] == self.dist[v] + 1:
+                    if self.DFS(self.pair_right[u]):
+                        self.pair_right[u] = v
+                        self.pair_left[v] = u
+                        return True
+            self.dist[v] = float('inf')
             return False
-
-        def transition(vertex):
-            if vertex in self.left:
-                return [adj for adj in vertex.adjacencies if adj.layer == -1 and frozenset([vertex, adj]) not in matching]
-            elif vertex in self.right:
-                return [adj for adj in vertex.adjacencies if adj.layer == -1 and frozenset([vertex, adj]) in matching]
-            else:
-                return []
-
-        for vertex in self.left:
-            if vertex.is_free(matching):
-                self.breadth_first_search(vertex, visit, transition)
-
-    def _find_augmenting_paths(self, matching):
-        self._find_layering(matching)
-        paths = []
-
-        for vertex in self.left | self.right:
-            vertex.used = False
-
-        def visit(vertex):
-            if vertex.layer == 0:
-                vertex.used = True
-                while vertex.prev is not None:
-                    vertex.prev.used = True
-                    self._path.add(frozenset([vertex, vertex.prev]))
-                    vertex = vertex.prev
-                return True
-            else:
-                return False
-
-        def transition(vertex):
-            if vertex in self.left:
-                return [adj for adj in vertex.adjacencies if not adj.used and frozenset([vertex, adj]) in matching and adj.layer == vertex.layer - 1]
-            if vertex in self.right:
-                return [adj for adj in vertex.adjacencies if not adj.used and frozenset([vertex, adj]) not in matching and adj.layer == vertex.layer - 1]
-            else:
-                return []
-
-        for vertex in self.right:
-            if vertex.layer == self._max_layer:
-                self._path = set([])
-                if self.depth_first_search(vertex, visit, transition):
-                    paths.append(self._path)
-
-        return paths
+        return True
 
     def max_matching(self):
-        matching = set([])
-        paths = self._find_augmenting_paths(matching)
-        while len(paths) > 0:
-            for path in paths:
-                matching ^= path
-            paths = self._find_augmenting_paths(matching)
+        for v in self.left | self.right | set(['nil']):
+            self.pair_left[v] = 'nil'
+            self.pair_right[v] = 'nil'
+        matching = 0
+        while self.BFS():
+            for v in self.left:
+                if self.pair_left[v] == 'nil':
+                    if self.DFS(v):
+                        matching += 1
         return matching
+
 
 if __name__ == '__main__':
     test_cases = int(sys.stdin.readline())
@@ -156,18 +88,16 @@ if __name__ == '__main__':
                 votes.add(vote)
                 like, hate = [val for val in vote.split(' ')]
 
-                vertex = Vertex(vote)
-
-                likes[like].add(vertex)
-                hates[hate].add(vertex)
+                likes[like].add(vote)
+                hates[hate].add(vote)
 
                 if vote.startswith('C'):
-                    graph.left.add(vertex)
+                    graph.add_left(vote)
                 if vote.startswith('D'):
-                    graph.right.add(vertex)
+                    graph.add_right(vote)
 
                 for conflict in likes[hate]:
-                    graph.add_edge(vertex, conflict)
+                    graph.add_edge(vote, conflict)
                 for conflict in hates[like]:
-                    graph.add_edge(vertex, conflict)
-        print v - len(graph.max_matching())
+                    graph.add_edge(vote, conflict)
+        print v - graph.max_matching()
