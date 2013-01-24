@@ -39,7 +39,6 @@ class HopcroftKarp(object):
                 if self.dist[self.pair_right[u]] == float('inf'):
                     self.dist[self.pair_right[u]] = self.dist[v] + 1
                     queue.append(self.pair_right[u])
-
         return self.dist['nil'] != float('inf')
 
     def DFS(self, v):
@@ -73,7 +72,6 @@ if __name__ == '__main__':
         c, d, v = [int(val) for val in sys.stdin.readline().split(' ')]
         likes = {}
         hates = {}
-        votes = set()
         for i in range(1, c + 1):
             likes['C%d' % i] = set([])
             hates['C%d' % i] = set([])
@@ -83,21 +81,19 @@ if __name__ == '__main__':
 
         graph = HopcroftKarp()
         for j in range(v):
-            vote = sys.stdin.readline().strip()
-            if vote not in votes:
-                votes.add(vote)
-                like, hate = [val for val in vote.split(' ')]
+            vote = "%d %s" % (j, sys.stdin.readline().strip())
+            like, hate = [val for val in vote.split(' ')[1:]]
 
-                likes[like].add(vote)
-                hates[hate].add(vote)
+            likes[like].add(vote)
+            hates[hate].add(vote)
 
-                if vote.startswith('C'):
-                    graph.add_left(vote)
-                if vote.startswith('D'):
-                    graph.add_right(vote)
+            if like.startswith('C'):
+                graph.add_left(vote)
+            if like.startswith('D'):
+                graph.add_right(vote)
 
-                for conflict in likes[hate]:
-                    graph.add_edge(vote, conflict)
-                for conflict in hates[like]:
-                    graph.add_edge(vote, conflict)
+            for conflict in likes[hate]:
+                graph.add_edge(vote, conflict)
+            for conflict in hates[like]:
+                graph.add_edge(vote, conflict)
         print v - graph.max_matching()
