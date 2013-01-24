@@ -135,46 +135,13 @@ class HopcroftKarp(object):
             paths = self._find_augmenting_paths(matching)
         return matching
 
-    def vertex_cover(self):
-        matching = self.max_matching()
-        self._cover = self.left.copy()
-
-        def visit(vertex):
-            if vertex in self.left:
-                self._cover.remove(vertex)
-            if vertex in self.right:
-                self._cover.add(vertex)
-            return False
-
-        def transition(vertex):
-            if vertex in self.left:
-                return [adj for adj in vertex.adjacencies if frozenset([vertex, adj]) not in matching]
-            elif vertex in self.right:
-                return [adj for adj in vertex.adjacencies if frozenset([vertex, adj]) in matching]
-            else:
-                return []
-
-        for vertex in self.left:
-            if vertex.is_free(matching):
-                self.depth_first_search(vertex, visit, transition)
-
-        return self._cover
-
-    def independent_set(self):
-        cover = self.vertex_cover()
-        return (self.left | self.right) - cover
-
-    def independent_set_size(self):
-        matching = self.max_matching()
-        return len(self.left) + len(self.right) - len(matching)
-
-
 if __name__ == '__main__':
     test_cases = int(sys.stdin.readline())
     for i in range(test_cases):
         c, d, v = [int(val) for val in sys.stdin.readline().split(' ')]
         likes = {}
         hates = {}
+        votes = set()
         for i in range(1, c + 1):
             likes['C%d' % i] = set([])
             hates['C%d' % i] = set([])
@@ -184,21 +151,23 @@ if __name__ == '__main__':
 
         graph = HopcroftKarp()
         for j in range(v):
-            vote = sys.stdin.readline()
-            like, hate = [val.rstrip() for val in vote.split(' ')]
+            vote = sys.stdin.readline().strip()
+            if vote not in votes:
+                votes.add(vote)
+                like, hate = [val for val in vote.split(' ')]
 
-            vertex = Vertex(vote)
+                vertex = Vertex(vote)
 
-            likes[like].add(vertex)
-            hates[hate].add(vertex)
+                likes[like].add(vertex)
+                hates[hate].add(vertex)
 
-            if vote.startswith('C'):
-                graph.left.add(vertex)
-            if vote.startswith('D'):
-                graph.right.add(vertex)
+                if vote.startswith('C'):
+                    graph.left.add(vertex)
+                if vote.startswith('D'):
+                    graph.right.add(vertex)
 
-            for conflict in likes[hate]:
-                graph.add_edge(vertex, conflict)
-            for conflict in hates[like]:
-                graph.add_edge(vertex, conflict)
-        print graph.independent_set_size()
+                for conflict in likes[hate]:
+                    graph.add_edge(vertex, conflict)
+                for conflict in hates[like]:
+                    graph.add_edge(vertex, conflict)
+        print v - len(graph.max_matching())

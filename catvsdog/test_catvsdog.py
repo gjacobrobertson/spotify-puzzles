@@ -15,23 +15,6 @@ class TestCatVsDog(unittest.TestCase):
             graph.add_edge(random.sample(graph.left, 1)[0], random.sample(graph.right, 1)[0])
         return graph
 
-    def _check_independence(self, graph, ind_set):
-        ind_list = list(ind_set)
-        for i in range(len(ind_list) - 1):
-            for j in range(i + 1, len(ind_list)):
-                if ind_list[i] in ind_list[j].adjacencies or ind_list[j] in ind_list[i].adjacencies:
-                    return False
-        return True
-
-    def _check_maximality(self, graph, ind_set):
-        #Verifies that the independent set is maximal. Does not verify that it is maximum.
-        #TODO: Think of an efficient way to check that the ind_set is of maximum cardinality
-        for vertex in graph.left | graph.right:
-            if vertex not in ind_set:
-                if self._check_independence(graph, ind_set | set([vertex])):
-                    return False
-        return True
-
     def random_tests(self, num_tests):
         for i in range(num_tests):
             left = random.randint(1, 100)
