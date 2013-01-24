@@ -133,7 +133,7 @@ class HopcroftKarp(object):
             for path in paths:
                 matching ^= path
             paths = self._find_augmenting_paths(matching)
-        return set([])
+        return matching
 
     def vertex_cover(self):
         matching = self.max_matching()
@@ -163,6 +163,10 @@ class HopcroftKarp(object):
     def independent_set(self):
         cover = self.vertex_cover()
         return (self.left | self.right) - cover
+
+    def independent_set_size(self):
+        matching = self.max_matching()
+        return len(self.left) + len(self.right) - len(matching)
 
 
 if __name__ == '__main__':
@@ -197,4 +201,4 @@ if __name__ == '__main__':
                 graph.add_edge(vertex, conflict)
             for conflict in hates[like]:
                 graph.add_edge(vertex, conflict)
-        print len(graph.independent_set())
+        print graph.independent_set_size()
