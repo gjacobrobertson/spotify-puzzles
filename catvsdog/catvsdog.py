@@ -4,32 +4,27 @@ from collections import deque
 
 class Vertex(object):
     def __init__(self, title):
-        self.title = title.rstrip()
-        self.adjacencies = set([])
-
-    def is_free(self, matching):
-        for edge in matching:
-            if self in edge:
-                return False
-        return True
+        self.title = title
+        self.adjacencies = {}
+        self.flow = {}
+        self.prev = None
 
     def __repr__(self):
         return self.title
 
 
-class HopcroftKarp(object):
+class WeightedBipartiteGraph(object):
     def __init__(self):
         self.left = set([])
         self.right = set([])
 
-    def add_edge(self, u, v):
+    def add_edge(self, u, v, w=1):
         if (u in self.left and v in self.right) or (u in self.right and v in self.left):
-            u.adjacencies.add(v)
-            v.adjacencies.add(u)
+            u.adjacencies[v] = w
+            v.adjacencies[u] = w
 
     def breadth_first_search(self, root, visit_fn, transition_fn):
-        for vertex in self.left | self.right:
-            vertex.prev = None
+        root.prev = None
         queue = deque()
         queue.append(root)
         visited = set([])
@@ -46,127 +41,60 @@ class HopcroftKarp(object):
 
         return False
 
-    def depth_first_search(self, root, visit_fn, transition_fn):
-        for vertex in self.left | self.right:
-            vertex.prev = None
-        stack = [root]
-        visited = set([])
-        while len(stack) > 0:
-            vertex = stack.pop()
-            visited.add(vertex)
-            if visit_fn(vertex):
-                return True
+    def matching(self):
+        s = Vertex('source')
+        self.right.add(s)
 
-            for adj in transition_fn(vertex):
-                if adj not in visited:
-                    adj.prev = vertex
-                    stack.append(adj)
 
-        return False
+        t = Vertex('terminal')
+        self.left.add(t)
 
-    def _find_layering(self, matching):
-        self._max_layer = 0
-        for vertex in self.left | self.right:
-            vertex.layer = -1
+        for l in self.left:
+            self.add_edge(s, l)
 
-        def visit(vertex):
-            if vertex.prev is not None:
-                vertex.layer = vertex.prev.layer + 1
-            else:
-                vertex.layer = 0
+        for r in self.right:
+            self.add_edge(r, t)
 
-            if vertex in self.right and vertex.is_free(matching):
-                self._max_layer = vertex.layer
+        self._max_flow(s, t)
 
-            return False
+        self.left.remove(t)
+        self.right.remove(s)
 
-        def transition(vertex):
-            if vertex in self.left:
-                return [adj for adj in vertex.adjacencies if adj.layer == -1 and frozenset([vertex, adj]) not in matching]
-            elif vertex in self.right:
-                return [adj for adj in vertex.adjacencies if adj.layer == -1 and frozenset([vertex, adj]) in matching]
-            else:
-                return []
-
-        for vertex in self.left:
-            if vertex.is_free(matching):
-                self.breadth_first_search(vertex, visit, transition)
-
-    def _find_augmenting_paths(self, matching):
-        self._find_layering(matching)
-        paths = []
-
-        for vertex in self.left | self.right:
-            vertex.used = False
-
-        def visit(vertex):
-            if vertex.layer == 0:
-                vertex.used = True
-                while vertex.prev is not None:
-                    vertex.prev.used = True
-                    self._path.add(frozenset([vertex, vertex.prev]))
-                    vertex = vertex.prev
-                return True
-            else:
-                return False
-
-        def transition(vertex):
-            if vertex in self.left:
-                return [adj for adj in vertex.adjacencies if not adj.used and frozenset([vertex, adj]) in matching and adj.layer == vertex.layer - 1]
-            if vertex in self.right:
-                return [adj for adj in vertex.adjacencies if not adj.used and frozenset([vertex, adj]) not in matching and adj.layer == vertex.layer - 1]
-            else:
-                return []
-
-        for vertex in self.right:
-            if vertex.layer == self._max_layer:
-                self._path = set([])
-                if self.depth_first_search(vertex, visit, transition):
-                    paths.append(self._path)
-
-        return paths
-
-    def max_matching(self):
         matching = set([])
-        paths = self._find_augmenting_paths(matching)
-        while len(paths) > 0:
-            for path in paths:
-                matching ^= path
-            paths = self._find_augmenting_paths(matching)
+        for l in self.left:
+            for r in l.adjacencies:
+                if l.flow[r] > 0:
+                    matching.add(frozenset([l, r]))
+
         return matching
 
-    def vertex_cover(self):
-        matching = self.max_matching()
-        self._cover = self.left.copy()
+    def _max_flow(self, s, t):
+        for vertex in self.left | self.right:
+            vertex.flow = {}
+            for adj in vertex.adjacencies:
+                vertex.flow[adj] = 0
 
         def visit(vertex):
-            if vertex in self.left:
-                self._cover.remove(vertex)
-            if vertex in self.right:
-                self._cover.add(vertex)
-            return False
+            if vertex == t:
+                return True
 
         def transition(vertex):
-            if vertex in self.left:
-                return [adj for adj in vertex.adjacencies if frozenset([vertex, adj]) not in matching]
-            elif vertex in self.right:
-                return [adj for adj in vertex.adjacencies if frozenset([vertex, adj]) in matching]
-            else:
-                return []
+            return [adj for adj in vertex.adjacencies if vertex.adjacencies[adj] - vertex.flow[adj] > 0]
 
-        for vertex in self.left:
-            if vertex.is_free(matching):
-                self.depth_first_search(vertex, visit, transition)
+        while self.breadth_first_search(s, visit, transition):
+            vertex = t
+            min_residual = sys.maxint
+            while vertex.prev is not None:
+                residual = vertex.prev.adjacencies[vertex] - vertex.prev.flow[vertex]
+                if residual < min_residual:
+                    min_residual = residual
+                vertex = vertex.prev
 
-        return self._cover
-
-    def independent_set(self):
-        cover = self.vertex_cover()
-        return (self.left | self.right) - cover
-
-    def independent_set_size(self):
-        matching = self.max_matching()
-        return len(self.left) + len(self.right) - len(matching)
+            vertex = t
+            while vertex.prev is not None:
+                vertex.prev.flow[vertex] += min_residual
+                vertex.flow[vertex.prev] -= min_residual
+                vertex = vertex.prev
 
 
 if __name__ == '__main__':
@@ -182,10 +110,10 @@ if __name__ == '__main__':
             likes['D%d' % i] = set([])
             hates['D%d' % i] = set([])
 
-        graph = HopcroftKarp()
+        graph = WeightedBipartiteGraph()
         for j in range(v):
-            vote = sys.stdin.readline()
-            like, hate = [val.rstrip() for val in vote.split(' ')]
+            vote = sys.stdin.readline().strip()
+            like, hate = [val.strip() for val in vote.split(' ')]
 
             vertex = Vertex(vote)
 
@@ -201,4 +129,4 @@ if __name__ == '__main__':
                 graph.add_edge(vertex, conflict)
             for conflict in hates[like]:
                 graph.add_edge(vertex, conflict)
-        print graph.independent_set_size()
+        print v - len(graph.matching())
