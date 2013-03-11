@@ -1,7 +1,6 @@
 import sys
 from collections import deque
 
-
 class HopcroftKarp(object):
     def __init__(self):
         self.adj = {'nil': set()}
@@ -80,9 +79,7 @@ if __name__ == '__main__':
             likes['D%d' % i] = set([])
             hates['D%d' % i] = set([])
 
-        graph = FlowNetwork()
-        graph.add_vertex('source')
-        graph.add_vertex('sink')
+        graph = HopcroftKarp()
         for j in range(v):
             vote = "%d %s" % (j, sys.stdin.readline().strip())
             like, hate = [val for val in vote.split(' ')[1:]]
